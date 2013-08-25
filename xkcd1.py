@@ -4,8 +4,8 @@ import math
 import sys
 from time import sleep
 
-width  = 81232989           # meters
-height = 81221232          # meters
+width  = 25           # meters
+height = 32          # meters
 walkingspeed = 8        # km/h
 
 def drawsquare(width, height):
