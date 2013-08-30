@@ -38,4 +38,4 @@ def graph(points, title="Graph", symbol="+"):
 		sys.stdout.write(" "+str(idx).ljust(2))
 
 if __name__ == "__main__":
-	graph(points, title, "penis")
+	graph(points, title, "boobies")
