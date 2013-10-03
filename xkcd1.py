@@ -82,20 +82,20 @@ sleep(0.1)
 if width <= 100 and height <= 100:              # only draw the illustration if it'll fit on the screen
     drawsquare(width, height)
 
-print "  Using width:     %sm" % width
-print "  Using height:    %sm" % height
-print "  Using speed:     %skm/h\n" % walkingspeed
+print("  Using width:     %sm" % width)
+print("  Using height:    %sm" % height)
+print("  Using speed:     %skm/h\n" % walkingspeed)
 
 baselength = lengthcalc(width, height, height)
-print "  Length of path without cutting accross the grass:    %sm" % baselength                 # full distance (all the way around the grass)
+print("  Length of path without cutting accross the grass:    %sm" % baselength)                 # full distance (all the way around the grass)
 basetime = timecalc(baselength, walkingspeed)
 
-print "  Time it would take you to walk that path:            %ssec\n" % basetime               # time it takes to walk the full distance (around the grass)
+print("  Time it would take you to walk that path:            %ssec\n" % basetime)               # time it takes to walk the full distance (around the grass)
 baseefficiency = efficiencycalc(basetime, basetime)
 
 sleep(0.1)
 
-print "Distance before cutting across     |      Efficiency boost       |       Total walking time       |       Total walking distance       |          Time saved"
+print("Distance before cutting across     |      Efficiency boost       |       Total walking time       |       Total walking distance       |          Time saved")
 
 lastefficiencyboost = 0
 for number in range(height, -1, -1):            # calculate every possible path (starting with the full distance and decreasing distance before cutting accross by 1m each time)
@@ -103,7 +103,7 @@ for number in range(height, -1, -1):            # calculate every possible path 
     time = timecalc(length, walkingspeed)
     efficiencyboost = 100-efficiencycalc(basetime, time)
 
-    if ((efficiencyboost - lastefficiencyboost) > 5) or (number == 0) or (number == height):        # only print if it saves more than 5% of the original time
+    if ((efficiencyboost - lastefficiencyboost) > 5) or (number == 0) or (number == height):        # only print(if it saves more than 5% of the original time
         lastefficiencyboost = efficiencyboost
 
         efficiencyboost = roundandunit(efficiencyboost,'%',1)
