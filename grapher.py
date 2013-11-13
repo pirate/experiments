@@ -5,7 +5,7 @@ import sys
 title = "The Graph"
 points = ((15,3),(24,4),(1, 6),(28,2))
 
-def graph(points, title="Graph", symbol="+"):
+def graph(points, title="", symbol="+"):
 	xmax = 0
 	ymax = 0
 	for point in points:
@@ -24,11 +24,13 @@ def graph(points, title="Graph", symbol="+"):
 	for point in points:
 		graph[point[1]-1][point[0]-1] = " %s " % symbol
 
-	sys.stdout.write(" "*((len(graph[0])*3/2)-len(title)/2)+title+"\n") # math for centering title
-	sys.stdout.write("   y\n")
+	if title:
+		sys.stdout.write(" "*((len(graph[0])*3/2)-len(title)/2)+title+"\n") # math for centering title
+		sys.stdout.write("   y\n")
 
 	for idx, row in enumerate(reversed(graph)):
-		sys.stdout.write("%s |" % str(len(graph)-idx).ljust(2))
+		if idx == 0: sys.stdout.write("%s y" % str(len(graph)-idx).ljust(2))
+		else: sys.stdout.write("%s |" % str(len(graph)-idx).ljust(2))
 		for point in row:
 			sys.stdout.write(point)
 		sys.stdout.write("\n")
@@ -38,4 +40,4 @@ def graph(points, title="Graph", symbol="+"):
 		sys.stdout.write(" "+str(idx).ljust(2))
 
 if __name__ == "__main__":
-	graph(points, title, "boobies")
+	graph(points, title, "X")
