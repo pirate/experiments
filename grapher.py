@@ -25,7 +25,8 @@ def graph(points, title="", symbol="+"):
 	sys.stdout.write("   y\n")
 
 	for idx, row in enumerate(reversed(graph)):
-		sys.stdout.write("%s |" % str(len(graph)-idx).ljust(2))
+		if idx == 0: sys.stdout.write("%s y" % str(len(graph)-idx).ljust(2))
+		else: sys.stdout.write("%s |" % str(len(graph)-idx).ljust(2))
 		for point in row:
 			sys.stdout.write(point)
 		sys.stdout.write("\n")
@@ -33,6 +34,3 @@ def graph(points, title="", symbol="+"):
 	sys.stdout.write("  0 ")
 	for idx in range(1, len(graph[0])+1):
 		sys.stdout.write(" "+str(idx).ljust(2))
-
-if __name__ == "__main__":
-	graph(points, title, "boobies")
