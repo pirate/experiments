@@ -2,10 +2,7 @@
 
 import sys
 
-title = "The Graph"
-points = ((15,3),(24,4),(1, 6),(28,2))
-
-def graph(points, title="Graph", symbol="+"):
+def graph(points, title="", symbol="+"):
 	xmax = 0
 	ymax = 0
 	for point in points:
@@ -24,7 +21,7 @@ def graph(points, title="Graph", symbol="+"):
 	for point in points:
 		graph[point[1]-1][point[0]-1] = " %s " % symbol
 
-	sys.stdout.write(" "*((len(graph[0])*3/2)-len(title)/2)+title+"\n") # math for centering title
+	if title: sys.stdout.write(" "*((len(graph[0])*3/2)-len(title)/2)+title+"\n") # math for centering title
 	sys.stdout.write("   y\n")
 
 	for idx, row in enumerate(reversed(graph)):
