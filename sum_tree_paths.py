@@ -17,12 +17,12 @@ class Node:
     def __str__(self):
         return self.__repr__()
 
-def generate_tree(depth=15, max_val=100, _i=0):
+def generate_tree(depth=15, min_val=0, max_val=100, _i=0):
     """Generate a random-value filled binary tree of a specified depth."""
-    root = Node(random.randint(0,max_val))
+    root = Node(random.randint(min_val,max_val))
     if _i < depth-1:
-        root.left = generate_tree(depth=depth, max_val=max_val, _i=_i+1)
-        root.right = generate_tree(depth=depth, max_val=max_val, _i=_i+1)
+        root.left = generate_tree(depth=depth, min_val=min_val, max_val=max_val, _i=_i+1)
+        root.right = generate_tree(depth=depth, min_val=min_val, max_val=max_val, _i=_i+1)
     return root
 
 def bfs(root, until=None):
@@ -38,27 +38,35 @@ def bfs(root, until=None):
                 Q.append(n.right)
     return nodes
 
-paths = {}  # globals are bad mmkay
+paths = []  # globals are bad mmkay
+history = set() # to make sure we dont re-start path creation when we've already done that
 def sum_all_paths(node, path=None, path_sum=0, until=None):
     """Starting at every node, walk down the tree, recording the path taken and sum of all its values at every point."""
-    path = path or []                                                       # path up to the current node
+    path = path or []                                                    # path up to the current node
+
     if node is not None:
         path.append(node)
         path_sum += node.val
 
-        if path_sum == until:
-            paths['>'.join(str(x.val) for x in path)] = path_sum            # store the path and sum up to this point e.g 95>32>23>4':154
+        if node.val == until and node not in history:
+            history.add(node)
+
+        elif path_sum == until: #or path_sum == until+1 or path_sum == until-1:
+            paths.append('>'.join(str(x.val) for x in path))            # store the path and sum up to this point e.g 95>32>23>4'
 
         # don't waste processing power computing paths that are already greater than the sum we're looking for
         if until is None or (until is not None and path_sum < until):
             sum_all_paths(node.left, path[:], path_sum, until)              # continue this path to the left
             sum_all_paths(node.right, path[:], path_sum, until)             # continue this path to the right
 
-        sum_all_paths(node.left, [], 0, until)                              # start a brand new path here, and continue to the left
-        sum_all_paths(node.right, [], 0, until)                             # start a brand new path here, and continue to the right
+        if node.left not in history:
+            history.add(node.left)
+            sum_all_paths(node.left, None, 0, until)                              # start a brand new path here, and continue to the left
+        if node.right not in history:
+            history.add(node.right)
+            sum_all_paths(node.right, None, 0, until)                             # start a brand new path here, and continue to the right
 
 if __name__ == "__main__":
-
     # The initial goal was to traverse a tree and find all possible paths who's nodes sum up to a certain value.
     # Paths can start at any node in the tree, but they all must go straight down, and the sum of their values must equal the number we're looking for.
 
@@ -77,36 +85,42 @@ if __name__ == "__main__":
     #     ...
     # }
 
-    max_node_val = 100              # maximum tree node value
-    max_tree_depth = 8              # maximum tree depth to test
-    min_sum,max_sum = 0,5           # number of path sums to test
-    trials = 100                    # number of trials to run for each depth and sum, also the max node value
+    min_val,max_val =     1,50                          # min, max tree node value
+    min_depth,max_depth = 10,15                         # min, max tree depth to test
+    min_sum,max_sum,sum_interval =     0,1000,50        # min, max number of path sums to test
+    trials = 10                                         # number of trials to run for each depth and sum, also the max node value
 
+    
+    print "You selected a max tree depth of %s, a max node value of %s, and a max search sum of %s.\n" % (max_depth, max_val, max_sum)
+    if max_depth*max_val < max_sum:
+        print "Warning, you will get 0 paths for several sum trials because %s*%s=%s, %s<%s!\n" % (max_depth, max_val, max_depth*max_val, max_depth*max_val,max_sum)
 
-    print "Average number of paths that add up to each sum (100 trials per tree depth)\n"
-    header_line = "|SUM|   tree depth: | %s |" % ' |   | '.join(str(i) for i in range(1,max_tree_depth+1))
+    print "Average number of paths that add up to each sum (%s trials per tree depth)\n" % trials
+    header_line = "|SUM|   tree depth:  |%s " % '    |'.join(str(i).ljust(3) for i in range(min_depth,max_depth+1))
     print "%s\n%s" % (header_line, len(header_line)*'-')
     trial_avgs = {}
-    for trial_sum in range(min_sum,max_sum+1):
+    avgs_by_depth = {d:[] for d in range(min_depth,max_depth+1)}
+
+    for trial_sum in range(min_sum,max_sum+1,sum_interval):
+        if trial_sum == 0:
+            continue
         trial_avgs[trial_sum] = {}              
 
-        for depth in range(1,max_tree_depth+1):
+        for depth in range(min_depth,max_depth+1):
             trial_avgs[trial_sum][depth] = []
-
             for trial in range(0,trials+1):
-                root = generate_tree(depth=depth, max_val=random.randint(0,max_node_val))
+                root = generate_tree(depth=depth, min_val=min_val, max_val=max_val)
                 sum_all_paths(root, until=trial_sum)
                 trial_avgs[trial_sum][depth].append(len(paths))
-                paths = {}
+                paths = []
+                history = set()
 
         rowstr = '  '+str(trial_sum).ljust(20)
         for depth, avg in trial_avgs[trial_sum].iteritems():
-            rowstr += str(sum(trial_avgs[trial_sum][depth])/len(trial_avgs[trial_sum][depth])).ljust(8)
+            avg = sum(trial_avgs[trial_sum][depth])/len(trial_avgs[trial_sum][depth])
+            avgs_by_depth[depth].append(avg)
+            rowstr += str(avg).ljust(8)
         print rowstr
 
-
-    averages = [sum(trial_avgs[s][d])/len(trial_avgs[s][d]) for s ]
-
-    print "%s\n%s" % (header_line, len(header_line)*'-')
-    print "Averages:     ",
-    print str('%s    ' for x in ().ljust(8)
+    print len(header_line)*'-'
+    print "Total Averages:       " + ''.join(str(sum(a)/len(a)).ljust(8) for a in avgs_by_depth.itervalues())
