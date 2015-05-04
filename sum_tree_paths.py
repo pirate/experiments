@@ -90,13 +90,21 @@ if __name__ == "__main__":
     min_sum,max_sum,sum_interval =     0,1000,50        # min, max number of path sums to test
     trials = 10                                         # number of trials to run for each depth and sum, also the max node value
 
+
+    print "This program generates a random-value filled binary tree.  It then walks through the tree in a depth-first order, finding all the paths who's nodes add up to a specified sum.\nThe paths can start at any node, but they must go straight down."
+    print "It runs this pathfinding search over a range of tree depths, random values, and desired path sums.  It then averages the result to find the relationship between #pathsfound:treedepth:desiredsum."
+
+    min_val = int(raw_input("Minimum node value (1):").strip() or min_val)
+    max_val = int(raw_input("Maximum node value (50):").strip() or max_val)
+    min_sum = int(raw_input("Starting Path sum to look for (0):").strip() or min_sum)
+
     
     print "You selected a max tree depth of %s, a max node value of %s, and a max search sum of %s.\n" % (max_depth, max_val, max_sum)
     if max_depth*max_val < max_sum:
         print "Warning, you will get 0 paths for several sum trials because %s*%s=%s, %s<%s!\n" % (max_depth, max_val, max_depth*max_val, max_depth*max_val,max_sum)
 
     print "Average number of paths that add up to each sum (%s trials per tree depth)\n" % trials
-    header_line = "|SUM|   tree depth:  |%s " % '    |'.join(str(i).ljust(3) for i in range(min_depth,max_depth+1))
+    header_line = "|SUM|  btree depth:  |%s " % '    |'.join(str(i).ljust(3) for i in range(min_depth,max_depth+1))
     print "%s\n%s" % (header_line, len(header_line)*'-')
     trial_avgs = {}
     avgs_by_depth = {d:[] for d in range(min_depth,max_depth+1)}
