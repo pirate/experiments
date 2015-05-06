@@ -1,22 +1,23 @@
-{-# LANGUAGE FlexibleInstances,OverlappingInstances, CPP #-}
+{-# LANGUAGE FlexibleInstances,OverlappingInstances #-}
 import Control.Monad
 import System.Exit
 import Data.List.Split
 import Data.Char (isDigit)
 
-data Player = X | O deriving (Eq, Show)
+data Player = X | O deriving (Eq)
 type Board = [[Maybe Player]]
-type Position = (Int, Int)
+type Position = (Int, Int) -- y,x
 opponent X = O
 opponent O = X
+playerStr X = "X"
+playerStr O = "O"
 
 instance Show (Maybe Player) where
   show Nothing = "#"
-  show (Just x) = show x
-
-instance Show [Maybe Player] where
-  show [] = ""
-  show (x:s) = show x ++ " " ++ show s
+  show (Just O) = "O"
+  show (Just X) = "X"
+  showList [] = showString ""
+  showList (x:s) = showString (show x ++ " " ++ show s)
 
 instance Show Board where
   show [] = ""
@@ -39,7 +40,7 @@ instance Read (Maybe Position) where
         then [(Just (y,x), "")]
         else [(Nothing, "")]
 
--- mutability rocks
+-- pseudomutability rocks
 replaceElement :: [a] -> Int -> a -> [a]
 replaceElement xs i x = fore ++ (x : aft)
   where (fore,aft) = (take i xs, drop (i+1) xs)
@@ -67,7 +68,7 @@ choosePlayer = do
     else let (Just p) = player in return p
 
 chooseMove player = do
-  putStrLn $ "Your Move " ++ show player ++ " (y0-2,x0-2):"
+  putStrLn $ "Your Move " ++ playerStr player ++ " (y0-2,x0-2):"
   moveStr <- getLine
   let move = read moveStr :: Maybe Position
   if move == Nothing
