@@ -10,7 +10,6 @@ type Position = (Int, Int)
 opponent X = O
 opponent O = X
 
-
 instance Show (Maybe Player) where
   show Nothing = "#"
   show (Just x) = show x
@@ -32,7 +31,7 @@ instance Read (Maybe Position) where
   readsPrec _ input = 
     let 
       (yi,xs) = span isDigit input  -- split on any character that's not a digit
-      (c:xi) = xs  -- take off the first character of yxportion (it's the comma)
+      (c:xi) = xs  -- take off the first character of the x portion (it's the comma)
       y = read yi :: Int
       x = read xi :: Int
     in
@@ -43,8 +42,7 @@ instance Read (Maybe Position) where
 -- mutability rocks
 replaceElement :: [a] -> Int -> a -> [a]
 replaceElement xs i x = fore ++ (x : aft)
-  where fore = take i xs
-        aft = drop (i+1) xs
+  where (fore,aft) = (take i xs, drop (i+1) xs)
 
 makeMove :: Player -> Position -> Board -> Board
 makeMove player (y,x) board = replaceElement board y row
@@ -52,19 +50,21 @@ makeMove player (y,x) board = replaceElement board y row
 
 gameOver :: Board -> Bool
 gameOver board = False
+-- not implemented yet
 
 winner :: Board -> Maybe Player
 winner board = Nothing
+-- not implemented yet
 
 choosePlayer = do
   putStrLn $ "TicTacToe! Choose (X/O):"
-  playerChoice <- getLine
-  let player = read playerChoice :: Maybe Player
+  playerStr <- getLine
+  let player = read playerStr :: Maybe Player
   if player == Nothing
-      then do
-        putStrLn $ "Invalid choice dumbass!"
-        choosePlayer
-      else let (Just p) = player in return p
+    then do
+      putStrLn $ "Invalid choice dumbass!"
+      choosePlayer
+    else let (Just p) = player in return p
 
 chooseMove player = do
   putStrLn $ "Your Move " ++ show player ++ " (y0-2,x0-2):"
@@ -78,8 +78,7 @@ chooseMove player = do
 
 gameLoop board player = do
   if gameOver board
-    then do
-      return (winner board)
+    then return (winner board)
     else do
       move <- chooseMove player
       let newBoard = makeMove player move board
