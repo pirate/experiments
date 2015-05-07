@@ -42,7 +42,7 @@ instance Read (Maybe Position) where
 
 -- pseudomutability rocks
 replaceElement :: [a] -> Int -> a -> [a]
-replaceElement xs i x = fore ++ (x : aft)
+replaceElement xs i x = fore ++ (x:aft)
   where (fore,aft) = (take i xs, drop (i+1) xs)
 
 makeMove :: Player -> Position -> Board -> Board
@@ -57,6 +57,7 @@ winner :: Board -> Maybe Player
 winner board = Nothing
 -- not implemented yet
 
+choosePlayer :: IO Player
 choosePlayer = do
   putStrLn $ "TicTacToe! Choose (X/O):"
   playerStr <- getLine
@@ -67,6 +68,7 @@ choosePlayer = do
       choosePlayer
     else let (Just p) = player in return p
 
+chooseMove :: Player -> IO Position
 chooseMove player = do
   putStrLn $ "Your Move " ++ playerStr player ++ " (y0-2,x0-2):"
   moveStr <- getLine
@@ -77,6 +79,7 @@ chooseMove player = do
       chooseMove player
     else let (Just m) = move in return m
 
+gameLoop :: Board -> Player -> IO (Maybe Player)
 gameLoop board player = do
   if gameOver board
     then return (winner board)
