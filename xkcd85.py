@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # http://xkcd.com/85/
-import math             # never do 'from math import *' it's bad practice!!!
+import math
 import sys
 from time import sleep
 
