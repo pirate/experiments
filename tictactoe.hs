@@ -1,16 +1,15 @@
 {-# LANGUAGE FlexibleInstances,OverlappingInstances #-}
 import Control.Monad
 import System.Exit
-import Data.List.Split
+--import Data.List.Split
 import Data.Char (isDigit)
 
 data Player = X | O deriving (Eq)
+data GameResult = GameResult Player | Tie | Unknown
 type Board = [[Maybe Player]]
 type Position = (Int, Int) -- y,x
 opponent X = O
 opponent O = X
-playerStr X = "X"
-playerStr O = "O"
 
 instance Show (Maybe Player) where
   show Nothing = "#"
@@ -49,12 +48,8 @@ makeMove :: Player -> Position -> Board -> Board
 makeMove player (y,x) board = replaceElement board y row
   where row = replaceElement (board !! y) x (Just player)
 
-gameOver :: Board -> Bool
-gameOver board = False
--- not implemented yet
-
-winner :: Board -> Maybe Player
-winner board = Nothing
+checkGame :: Board -> GameResult
+checkGame board = False
 -- not implemented yet
 
 choosePlayer :: IO Player
@@ -70,7 +65,7 @@ choosePlayer = do
 
 chooseMove :: Player -> IO Position
 chooseMove player = do
-  putStrLn $ "Your Move " ++ playerStr player ++ " (y0-2,x0-2):"
+  putStrLn $ "Your Move " ++ show (Just player) ++ " (y0-2,x0-2):"
   moveStr <- getLine
   let move = read moveStr :: Maybe Position
   if move == Nothing
@@ -81,7 +76,7 @@ chooseMove player = do
 
 gameLoop :: Board -> Player -> IO (Maybe Player)
 gameLoop board player = do
-  if gameOver board
+  if checkGame board
     then return (winner board)
     else do
       move <- chooseMove player
@@ -96,5 +91,5 @@ main = do
                  [Nothing, Nothing, Nothing],
                  [Nothing, Nothing, Nothing]] :: Board
     putStrLn $ show board
-    winner <- gameLoop board player
-    putStrLn $ "Game over, " ++ show winner ++ " won."
+    champion <- gameLoop board player
+    putStrLn $ "Game over, " ++ show champion ++ " won."

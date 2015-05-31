@@ -87,10 +87,10 @@ print("  Using height:    %sm" % height)
 print("  Using speed:     %skm/h\n" % walkingspeed)
 
 baselength = lengthcalc(width, height, height)
-print("  Length of path without cutting accross the grass:    %sm" % baselength)                 # full distance (all the way around the grass)
+print("  Length of path without cutting accross the grass:    %s" % roundandunit(baselength,'m',2))                 # full distance (all the way around the grass)
 basetime = timecalc(baselength, walkingspeed)
 
-print("  Time it would take you to walk that path:            %ssec\n" % basetime)               # time it takes to walk the full distance (around the grass)
+print("  Time it would take you to walk that path:            %s\n" % roundandunit(basetime,'sec',2))               # time it takes to walk the full distance (around the grass)
 baseefficiency = efficiencycalc(basetime, basetime)
 
 sleep(0.1)
