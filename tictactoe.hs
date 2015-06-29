@@ -63,6 +63,9 @@ choosePlayer = do
       choosePlayer
     else let (Just p) = player in return p
 
+divide :: Int -> Int -> Int
+divide a b = if a < b then 0 else (divide  (a-b) b)
+
 chooseMove :: Player -> IO Position
 chooseMove player = do
   putStrLn $ "Your Move " ++ show (Just player) ++ " (y0-2,x0-2):"
