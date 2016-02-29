@@ -5,29 +5,29 @@ import sys
 import re
 from time import sleep
 
-width        = int(sys.argv[1]) if len(sys.argv > 1) else 25  # meters
-height       = int(sys.argv[2]) if len(sys.argv > 1) else 25  # meters
-walkingspeed = int(sys.argv[3]) if len(sys.argv > 2) else 8   # km/h
+width        = int(sys.argv[1]) if len(sys.argv) > 1 else 25     # meters
+height       = int(sys.argv[2]) if len(sys.argv) > 2 else width  # meters
+walkingspeed = int(sys.argv[3]) if len(sys.argv) > 3 else 8      # km/h
 
 def drawsquare(width, height):
     '''Prints a square showing the height to width ratio of a given square'''
     # TOP
     sys.stdout.write("╭")                   # sys.stdout.write is the same as print() but it doesnt add the newline after
     for number in range(0, width):
-        sys.stdout.write("━")
+        sys.stdout.write("━━")
     sys.stdout.write("╮\n")
 
     # MIDDLE
     for number in range(0, height):
         sys.stdout.write("┃")
         for number in range(0, width):
-            sys.stdout.write(" ")
+            sys.stdout.write("  ")
         sys.stdout.write("┃\n")
 
     # BOTTOM
     sys.stdout.write("╰")
     for number in range(0, width):
-        sys.stdout.write("━")
+        sys.stdout.write("━━")
     sys.stdout.write("╯\n\n")
 
 def lengthcalc(width, height, cutpoint):
@@ -115,7 +115,7 @@ for dist in range(height, -1, -1):
         timesaved = roundandunit(basetime-time, 'sec', 0)
         time = roundandunit(time, 'sec', 0)
 
-        print("            %s+%s%s%s" % (
+        print("            %s+%s%s%s %ss" % (
             dist.ljust(33),
             efficiencyboost.ljust(33),
             time.ljust(33),
