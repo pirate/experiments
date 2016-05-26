@@ -3,6 +3,7 @@
 # Simple Neural network based on http://lumiverse.io/video/part-2-forward-propagation
 
 from collections import defaultdict
+from queue import Queue
 import numpy as np
 
 
@@ -32,6 +33,9 @@ def sigmoid_derivative(z):
 
 def cost(actual, expected):
     """euclidian distance cost (loss) function for gradient descent"""
+    # the cost function is euclidian distance because you're trying to reduce
+    # your distance from the expected value in multi-dimensional space
+
     return 0.5 * sum((expected - actual) ** 2)
 
 
@@ -53,6 +57,7 @@ class NeuralNetwork(object):
         self.weights = weights or self.default_hyperparameters['weights']
         self.a = []  # layer activity
         self.z = []  # weighted layer inputs
+        self.e = np.zeros_like(self.weights)
         self.stats = defaultdict(int)
 
         # safety checks
@@ -78,7 +83,7 @@ class NeuralNetwork(object):
         layers_str = '->'.join(str(l) for l in self.layers)
         # stats_str = ', '.join('%s: %s' % (k,v ) for k, v in self.stats.items())
 
-        return 'NN: {0} # ♻️  {1} # {2} ⚖ '.format(
+        return 'NN: {0} # ♻️  {1}:{2} ⚖ '.format(
             layers_str, self.stats['forwards'], self.weights)
 
     def __repr__(self):
@@ -94,7 +99,6 @@ class NeuralNetwork(object):
 
     def forward(self, values):
         """propagate values through the network iteratively"""
-
         # feed input into the first layer
         self.a.append(values)
 
@@ -110,6 +114,16 @@ class NeuralNetwork(object):
 
         # return the output layer activity
         return self.a[-1]
+
+    def backpropagate(self, expected):
+        """iteratively calculate the error and change layer weights accordingly"""
+
+        actual = self.a[-1]  # last layer activity is output
+
+        for layer in reversed(self.layers):
+            # start at the output layer
+            return self.cost_func(actual, expected)
+
 
 
     def cost_derivative(self, actual, expected, layer_idx):
@@ -138,13 +152,14 @@ if __name__ == '__main__':
         [5, 1],
         [10, 2],
     ]
-    expected_outputs = [
-        [75],
-        [82],
-        [93],
-    ]
+    expected_outputs = [[75], [82], [93]]
 
     network = NeuralNetwork(**hyperparameters)
-    print(network.forward(inputs))
+
+    print(network.__str__() + '\n')
+    print('expected: %s\n' % expected_outputs)
+
+    results = network.forward(inputs)
+    print('actual: %s\n' % results)
     print(network.__str__())
-    print(network.__repr__())
+    print(network.backpropagate(expected_outputs))
