@@ -1,0 +1,155 @@
+import re
+
+# mapping of terminal token type to regex of characters that match that type
+TOKEN_TYPES = {
+    name: re.compile(pattern) for name, pattern in
+    {
+        'INT': r'\d+',
+        'OPEN': r'\(',
+        'CLOSE': r'\)',
+        'PLUS': r'\+',
+        'TIMES': r'\*',
+    }.items()
+}
+
+# grammar that describes the accepted sequences
+# current token : [possible next token types]
+GRAMMAR = {
+    'START': {'INT', 'OPEN'},
+    'INT': {'INT', 'CLOSE', 'PLUS', 'TIMES', 'END'},
+    'OPEN': {'INT'},
+    'CLOSE': {'PLUS', 'TIMES', 'END'},
+    'PLUS': {'INT', 'OPEN'},
+    'TIMES': {'INT', 'OPEN'},
+    'END': {''},
+}
+
+
+def is_token(token_type: str, token: str, token_types=TOKEN_TYPES) -> bool:
+    """check that a string token matches a given token type regex"""
+
+    assert token_type in token_types, 'Unrecognized token type %s' % token_type
+    return bool(token_types[token_type].match(token))
+
+def test_is_token():
+    assert is_token('INT', '5'), "Token type INT didn't match 5"
+    assert not is_token('INT', '+'), "Token type INT matched match +"
+    assert is_token('OPEN', '('), "Token type OPEN didn't match ("
+    assert not is_token('OPEN', ')'), "Token type OPEN matched )"
+    assert is_token('PLUS', '+'), "Token type PLUS didn't match +"
+    assert not is_token('PLUS', '*'), "Token type PLUS matched *"
+    assert is_token('TIMES', '*'), "Token type TIMES didn't match *"
+    assert not is_token('TIMES', '+'), "Token type TIMES matched +"
+
+
+class InputConsumer(object):
+    """A stepper to store current position in a string buffer to aid parsing"""
+
+    def __init__(self, input_stream='', start_pos=0):
+        self.input_stream = input_stream
+        self.current_idx = start_pos
+
+    def at(self, idx=None):
+        idx = idx if idx is not None else self.current_idx
+        if idx > len(self.input_stream) - 1:
+            return ''
+        return self.input_stream[idx]
+
+    def step(self):
+        self.current_idx += 1
+
+    def back(self):
+        self.current_idx -= 1
+
+    def __str__(self):
+        before = self.input_stream[:self.current_idx]
+        curr = self.input_stream[self.current_idx]
+        after = self.input_stream[self.current_idx + 1:]
+        return '{0}[{1}]{2}'.format(before, curr, after)
+
+    def __repr__(self):
+        return str(self)
+
+
+class LexerNode(object):
+    """A linked list of lexed nodes storing node type, token str, next, and prev"""
+
+    def __init__(self, token: str, token_type=None, prev_node=None, next_node=None):
+        self.token = token
+        self.token_type = token_type
+        self.prev_node = prev_node
+        self.next_node = next_node
+
+
+    def __str__(self):
+        return '<{0}{1}> {2}'.format(
+            self.token_type,
+            ': {0}'.format(self.token) if self.token else '',
+            self.next_node or '',
+        )
+
+    def __repr__(self):
+        return str(self)
+
+    def __eq__(self, other):
+        return (
+            self.token == other.token and
+            self.token_type == other.token_type and
+            self.next_node == other.next_node
+        )
+
+
+def lex(input_stream: str) -> LexerNode:
+    """Lex an input string into a LexerNode linked list chain of tokens"""
+
+    stream = InputConsumer(input_stream)
+    lexed_chain = LexerNode('', 'START')
+    current_node = lexed_chain
+
+    while stream.at():
+        current_token = stream.at()
+        token_type = None
+
+        for name in TOKEN_TYPES.keys():
+            if is_token(name, current_token):
+                token_type = name
+                break
+
+        stream.step()
+        new_node = LexerNode(current_token, token_type, current_node)
+        current_node.next_node = new_node
+        current_node = new_node
+
+    end_node = LexerNode('', 'END', current_node)
+    current_node.next_node = end_node
+    current_node = end_node
+
+    return lexed_chain
+
+
+def validate_lex(lexed_chain, grammar=GRAMMAR) -> bool:
+    """Confirm that a lexed chain follows a given grammar"""
+
+    current_node = lexed_chain
+    while current_node.next_node:
+        token_type = current_node.token_type
+        next_token_type = current_node.next_node.token_type
+
+        if next_token_type not in grammar[token_type]:
+            return False
+
+        current_node = current_node.next_node
+
+    return True
+
+
+if __name__ == '__main__':
+    test_is_token()
+
+    input_stream = '(5+4)*(3+5)'
+
+    lexed_chain = lex(input_stream)
+
+    print(input_stream, '=>', 'Valid parse!' if validate_lex(lexed_chain) else 'Invalid parse!')
+    print()
+    print(lexed_chain)
