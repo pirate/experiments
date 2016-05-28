@@ -16,7 +16,7 @@ const stringifyObject = (item) => {
         return stringifyItem(item)
 
     // recursive case where item is a list
-    if (item && item.map) {
+    if (item.map) {
         let str_items = ''
         for (let subitem of item) {
             str_items += `${stringifyObject(subitem)},`
@@ -24,7 +24,7 @@ const stringifyObject = (item) => {
         // remove trailing comma
         if (str_items.length)
             str_items = str_items.slice(0, -1)
- 
+
         return `[${str_items}]`
     }
 
