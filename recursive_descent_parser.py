@@ -4,11 +4,11 @@ import re
 TOKEN_TYPES = {
     name: re.compile(pattern) for name, pattern in
     {
-        'INT': r'\d+',
-        'OPEN': r'\(',
-        'CLOSE': r'\)',
-        'PLUS': r'\+',
-        'TIMES': r'\*',
+        'INT': r'^\d+$',
+        'OPEN': r'^\($',
+        'CLOSE': r'^\)$',
+        'PLUS': r'^\+$',
+        'TIMES': r'^\*$',
     }.items()
 }
 
