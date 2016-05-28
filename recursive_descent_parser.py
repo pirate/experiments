@@ -21,7 +21,7 @@ GRAMMAR = {
     'CLOSE': {'PLUS', 'TIMES', 'END'},
     'PLUS': {'INT', 'OPEN'},
     'TIMES': {'INT', 'OPEN'},
-    'END': {''},
+    'END': {},
 }
 
 
@@ -100,7 +100,7 @@ class LexerNode(object):
 
 
 def lex(input_stream: str) -> LexerNode:
-    """Lex an input string into a LexerNode linked list chain of tokens"""
+    """Lex an input string into a LexerNode chain of tokens"""
 
     stream = InputConsumer(input_stream)
     lexed_chain = LexerNode('', 'START')
@@ -142,14 +142,26 @@ def validate_lex(lexed_chain, grammar=GRAMMAR) -> bool:
 
     return True
 
+def test_lexing():
+    true_cases = ['5', '55', '(5)',
+                  '(5+5)', '5+5', '(5)+5', '5+(5)',
+                  '(5)+(5)', '(5)+5+(5)',
+                  '5)+5+(5']  # this case is an invalid parse, but a valid lex
+
+    for case in true_cases:
+        chain = lex(case)
+        assert validate_lex(chain), 'Got invalid lex for {0} => {1}'.format(case, chain)
+
+    false_cases = ['(', ')', '()', ')(', '((', '))',
+                   '+', '5+', '+5',
+                   '(+)', '(+', '+)', ')+', '+(', ')+(',
+                   '5+5+', '+5+5+', '+5+5']
+
+    for case in false_cases:
+        chain = lex(case)
+        assert not validate_lex(chain), 'Got valid lex for {0} => {1}'.format(case, chain)
+
 
 if __name__ == '__main__':
     test_is_token()
-
-    input_stream = '(5+4)*(3+5)'
-
-    lexed_chain = lex(input_stream)
-
-    print(input_stream, '=>', 'Valid parse!' if validate_lex(lexed_chain) else 'Invalid parse!')
-    print()
-    print(lexed_chain)
+    test_lexing()
