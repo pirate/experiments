@@ -45,20 +45,20 @@ def test_is_token():
 class InputConsumer(object):
     """A stepper to store current position in a string buffer to aid parsing"""
 
-    def __init__(self, input_stream='', start_pos=0):
+    def __init__(self, input_stream: str='', start_pos=0) -> None:
         self.input_stream = input_stream
         self.current_idx = start_pos
 
-    def at(self, idx=None):
+    def at(self, idx: int=None):
         idx = idx if idx is not None else self.current_idx
         if idx > len(self.input_stream) - 1:
             return ''
         return self.input_stream[idx]
 
-    def step(self):
+    def step(self) -> None:
         self.current_idx += 1
 
-    def back(self):
+    def back(self) -> None:
         self.current_idx -= 1
 
     def __str__(self):
@@ -74,24 +74,27 @@ class InputConsumer(object):
 class LexerNode(object):
     """A linked list of lexed nodes storing node type, token str, next, and prev"""
 
-    def __init__(self, token: str, token_type=None, prev_node=None, next_node=None):
+    def __init__(self, token: str, token_type: str=None,
+                 prev_node: LexerNode=None, next_node: LexerNode=None) -> None:
         self.token = token
         self.token_type = token_type
         self.prev_node = prev_node
         self.next_node = next_node
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{0}{1}> {2}'.format(
             self.token_type,
             ': {0}'.format(self.token) if self.token else '',
             self.next_node or '',
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
-    def __eq__(self, other):
+    def __eq__(self: LexerNode, other: object) -> bool:
+        if not isinstance(other, LexerNode):
+            return NotImplemented
         return (
             self.token == other.token and
             self.token_type == other.token_type and
@@ -127,7 +130,7 @@ def lex(input_stream: str) -> LexerNode:
     return lexed_chain
 
 
-def validate_lex(lexed_chain, grammar=GRAMMAR) -> bool:
+def validate_lex(lexed_chain: LexerNode, grammar=GRAMMAR) -> bool:
     """Confirm that a lexed chain follows a given grammar"""
 
     current_node = lexed_chain
