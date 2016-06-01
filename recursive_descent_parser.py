@@ -75,7 +75,7 @@ class LexerNode(object):
     """A linked list of lexed nodes storing node type, token str, next, and prev"""
 
     def __init__(self, token: str, token_type: str=None,
-                 prev_node: LexerNode=None, next_node: LexerNode=None) -> None:
+                 prev_node: 'LexerNode'=None, next_node: 'LexerNode'=None) -> None:
         self.token = token
         self.token_type = token_type
         self.prev_node = prev_node
@@ -92,7 +92,7 @@ class LexerNode(object):
     def __repr__(self) -> str:
         return str(self)
 
-    def __eq__(self: LexerNode, other: object) -> bool:
+    def __eq__(self: 'LexerNode', other: object) -> bool:
         if not isinstance(other, LexerNode):
             return NotImplemented
         return (
