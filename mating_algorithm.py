@@ -1,8 +1,8 @@
-# Nick Sweeting 2016/19/08
+# Nick Sweeting 2016/10/08
 # Mating Algorithm
 #
-# Find ideal matching pairs given a list of boys and girls, and their preferences for eachother
-# MIT 6.042J Mathematics for Computer Science
+# Find ideal matching pairs given a list of boys and girls, and their preferences for eachother.
+# MIT 6.042J Mathematics for Computer Science: Lecture 6
 # https://www.youtube.com/watch?v=5RSMLgy06Ew
 
 from collections import defaultdict
@@ -61,4 +61,8 @@ def find_matches(girls_prefs: dict, boys_prefs: dict):
     return {girl: boys.pop() for girl, boys in suitors.items()}
 
 if __name__ == '__main__':
+    # every boy gets best possible mate
     print('MATCHES:    ', find_matches(GIRLS_PREFERENCES, BOYS_PREFERENCES))
+
+    # every girl gets optimal mate
+    print('MATCHES:    ', find_matches(BOYS_PREFERENCES, GIRLS_PREFERENCES))
