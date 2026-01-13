@@ -4,263 +4,149 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Translate Mash</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    h1 {
-      color: white;
-      font-size: 2.5rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .subtitle {
-      color: rgba(255,255,255,0.85);
-      margin-top: 8px;
-    }
-
-    .main-content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    @media (max-width: 900px) {
-      .main-content {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .panel {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .panel-title {
-      font-size: 1.1rem;
-      color: #333;
-      font-weight: 600;
-    }
-
-    .input-panel textarea {
-      width: 100%;
-      height: 200px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 1rem;
-      resize: vertical;
-      transition: border-color 0.2s;
-    }
-
-    .input-panel textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .language-selector {
-      margin-top: 20px;
-    }
-
-    .language-selector h3 {
-      font-size: 0.9rem;
-      color: #666;
-      margin-bottom: 12px;
-    }
-
-    .language-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .language-chip {
-      padding: 8px 16px;
-      border-radius: 20px;
-      border: 2px solid #e0e0e0;
-      background: white;
+    /* Custom slider styling for shadcn look */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
       cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.9rem;
     }
 
-    .language-chip:hover {
-      border-color: #667eea;
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 9999px;
+      background: #e2e8f0;
     }
 
-    .language-chip.selected {
-      background: #667eea;
-      border-color: #667eea;
-      color: white;
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 9999px;
+      background: #18181b;
+      margin-top: -4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.15s ease;
     }
 
-    .translate-btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 8px;
+      border-radius: 9999px;
+      background: #e2e8f0;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 9999px;
+      background: #18181b;
       border: none;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.15s ease;
     }
 
-    .translate-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    input[type="range"]::-moz-range-thumb:hover {
+      transform: scale(1.1);
     }
 
-    .translate-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    /* Smooth scrollbar */
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
     }
 
-    .translations-list {
-      max-height: 500px;
-      overflow-y: auto;
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
     }
 
-    .translation-item {
-      padding: 16px;
-      border-bottom: 1px solid #eee;
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+      border-radius: 3px;
     }
 
-    .translation-item:last-child {
-      border-bottom: none;
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #cbd5e1;
     }
 
-    .translation-lang {
-      font-size: 0.85rem;
-      color: #667eea;
-      font-weight: 600;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* Pulse animation for loading */
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
 
-    .translation-lang .flag {
-      font-size: 1.2rem;
-    }
-
-    .translation-text {
-      font-size: 1rem;
-      color: #333;
-      line-height: 1.5;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #999;
-    }
-
-    .empty-state svg {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e0e0e0;
-      border-top-color: #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .error-message {
-      background: #fff5f5;
-      color: #c53030;
-      padding: 16px;
-      border-radius: 12px;
-      text-align: center;
-    }
-
-    .char-count {
-      font-size: 0.85rem;
-      color: #999;
+    .animate-pulse-subtle {
+      animation: pulse-subtle 1.5s ease-in-out infinite;
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Translate Mash</h1>
-      <p class="subtitle">Translate to multiple languages at once</p>
+<body class="min-h-screen bg-zinc-50 font-sans antialiased">
+  <div class="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+    <!-- Header -->
+    <header class="mb-8">
+      <h1 class="text-2xl sm:text-3xl font-semibold text-zinc-900 tracking-tight">Translate Mash</h1>
+      <p class="mt-1 text-zinc-500 text-sm">Translate to multiple languages simultaneously</p>
     </header>
 
-    <div class="main-content">
-      <div class="panel input-panel">
-        <div class="panel-header">
-          <span class="panel-title">Enter text</span>
-          <span class="char-count"><span id="charCount">0</span> characters</span>
+    <!-- Main Grid -->
+    <div class="grid lg:grid-cols-2 gap-6">
+      <!-- Input Panel -->
+      <div class="bg-white rounded-xl border border-zinc-200 shadow-sm">
+        <div class="p-4 border-b border-zinc-100">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-zinc-700">Source text</span>
+            <span class="text-xs text-zinc-400"><span id="charCount">0</span> chars</span>
+          </div>
         </div>
-        <textarea id="inputText" placeholder="Type or paste text to translate..."></textarea>
-
-        <div class="language-selector">
-          <h3>Select output languages</h3>
-          <div class="language-chips" id="languageChips"></div>
+        <div class="p-4">
+          <textarea
+            id="inputText"
+            placeholder="Start typing to translate..."
+            class="w-full h-48 resize-none border-0 bg-transparent text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-0 text-base leading-relaxed"
+          ></textarea>
         </div>
-
-        <button class="translate-btn" id="translateBtn" disabled>Translate</button>
+        <div class="p-4 border-t border-zinc-100 bg-zinc-50/50 rounded-b-xl">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-zinc-500 uppercase tracking-wider">Languages</span>
+            <span class="text-xs text-zinc-400" id="selectedCount">10 selected</span>
+          </div>
+          <div class="flex flex-wrap gap-2" id="languageChips"></div>
+        </div>
       </div>
 
-      <div class="panel output-panel">
-        <div class="panel-header">
-          <span class="panel-title">Translations</span>
-          <span id="selectedCount">0 languages selected</span>
+      <!-- Output Panel -->
+      <div class="bg-white rounded-xl border border-zinc-200 shadow-sm flex flex-col">
+        <div class="p-4 border-b border-zinc-100 flex items-center justify-between">
+          <span class="text-sm font-medium text-zinc-700">Translations</span>
+          <div id="statusIndicator" class="flex items-center gap-2 text-xs text-zinc-400">
+            <span id="statusText">Ready</span>
+          </div>
         </div>
-        <div class="translations-list" id="translationsList">
-          <div class="empty-state">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="flex-1 overflow-y-auto scrollbar-thin max-h-[500px]" id="translationsList">
+          <div class="flex flex-col items-center justify-center h-64 text-zinc-400">
+            <svg class="w-12 h-12 mb-3 text-zinc-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
             </svg>
-            <p>Enter text and click Translate<br>to see translations here</p>
+            <p class="text-sm">Start typing to see translations</p>
           </div>
         </div>
       </div>
@@ -268,79 +154,124 @@
   </div>
 
   <script>
-    // Top 10 most spoken languages with flags
     const LANGUAGES = [
-      { name: 'English', flag: '🇬🇧' },
-      { name: 'Mandarin Chinese', flag: '🇨🇳' },
-      { name: 'Hindi', flag: '🇮🇳' },
-      { name: 'Spanish', flag: '🇪🇸' },
-      { name: 'French', flag: '🇫🇷' },
-      { name: 'Arabic', flag: '🇸🇦' },
-      { name: 'Bengali', flag: '🇧🇩' },
-      { name: 'Portuguese', flag: '🇧🇷' },
-      { name: 'Russian', flag: '🇷🇺' },
-      { name: 'Japanese', flag: '🇯🇵' }
+      { name: 'English', flag: '🇬🇧', code: 'en' },
+      { name: 'Mandarin Chinese', flag: '🇨🇳', code: 'zh' },
+      { name: 'Hindi', flag: '🇮🇳', code: 'hi' },
+      { name: 'Spanish', flag: '🇪🇸', code: 'es' },
+      { name: 'French', flag: '🇫🇷', code: 'fr' },
+      { name: 'Arabic', flag: '🇸🇦', code: 'ar' },
+      { name: 'Bengali', flag: '🇧🇩', code: 'bn' },
+      { name: 'Portuguese', flag: '🇧🇷', code: 'pt' },
+      { name: 'Russian', flag: '🇷🇺', code: 'ru' },
+      { name: 'Japanese', flag: '🇯🇵', code: 'ja' }
     ];
 
     let selectedLanguages = new Set(LANGUAGES.map(l => l.name));
     let isLoading = false;
+    let debounceTimer = null;
+    let lastTranslatedText = '';
+    let currentTranslations = {};
 
     const inputText = document.getElementById('inputText');
     const charCount = document.getElementById('charCount');
     const languageChips = document.getElementById('languageChips');
-    const translateBtn = document.getElementById('translateBtn');
     const translationsList = document.getElementById('translationsList');
     const selectedCount = document.getElementById('selectedCount');
+    const statusText = document.getElementById('statusText');
 
-    // Initialize language chips
     function initLanguageChips() {
       languageChips.innerHTML = LANGUAGES.map(lang => `
-        <button class="language-chip selected" data-lang="${lang.name}">
-          ${lang.flag} ${lang.name}
+        <button
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150 border selected bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-800"
+          data-lang="${lang.name}"
+        >
+          <span>${lang.flag}</span>
+          <span>${lang.name}</span>
         </button>
       `).join('');
 
       languageChips.addEventListener('click', (e) => {
-        const chip = e.target.closest('.language-chip');
+        const chip = e.target.closest('button[data-lang]');
         if (!chip) return;
 
         const lang = chip.dataset.lang;
         if (selectedLanguages.has(lang)) {
           selectedLanguages.delete(lang);
-          chip.classList.remove('selected');
+          chip.classList.remove('bg-zinc-900', 'text-white', 'border-zinc-900', 'hover:bg-zinc-800');
+          chip.classList.add('bg-white', 'text-zinc-700', 'border-zinc-200', 'hover:border-zinc-300', 'hover:bg-zinc-50');
         } else {
           selectedLanguages.add(lang);
-          chip.classList.add('selected');
+          chip.classList.add('bg-zinc-900', 'text-white', 'border-zinc-900', 'hover:bg-zinc-800');
+          chip.classList.remove('bg-white', 'text-zinc-700', 'border-zinc-200', 'hover:border-zinc-300', 'hover:bg-zinc-50');
         }
         updateUI();
+        debouncedTranslate();
       });
     }
 
     function updateUI() {
-      const text = inputText.value.trim();
-      const hasText = text.length > 0;
-      const hasLanguages = selectedLanguages.size > 0;
-
-      translateBtn.disabled = !hasText || !hasLanguages || isLoading;
       charCount.textContent = inputText.value.length;
-      selectedCount.textContent = `${selectedLanguages.size} language${selectedLanguages.size !== 1 ? 's' : ''} selected`;
+      selectedCount.textContent = `${selectedLanguages.size} selected`;
+    }
+
+    function setStatus(status, loading = false) {
+      statusText.textContent = status;
+      if (loading) {
+        statusText.classList.add('animate-pulse-subtle');
+      } else {
+        statusText.classList.remove('animate-pulse-subtle');
+      }
     }
 
     function renderTranslations(translations) {
       const orderedTranslations = LANGUAGES
-        .filter(lang => translations[lang.name])
+        .filter(lang => selectedLanguages.has(lang.name) && translations[lang.name])
         .map(lang => ({
           ...lang,
           text: translations[lang.name]
         }));
 
-      translationsList.innerHTML = orderedTranslations.map(t => `
-        <div class="translation-item">
-          <div class="translation-lang">
-            <span class="flag">${t.flag}</span>
-            ${t.name}
+      if (orderedTranslations.length === 0) {
+        translationsList.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-64 text-zinc-400">
+            <svg class="w-12 h-12 mb-3 text-zinc-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            <p class="text-sm">Start typing to see translations</p>
           </div>
-          <div class="translation-text">${escapeHtml(t.text)}</div>
+        `;
+        return;
+      }
+
+      translationsList.innerHTML = orderedTranslations.map(t => `
+        <div class="p-4 border-b border-zinc-100 last:border-b-0 group hover:bg-zinc-50/50 transition-colors">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">${t.flag}</span>
+              <span class="text-sm font-medium text-zinc-900">${t.name}</span>
+            </div>
+            <div class="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+                class="w-20 h-2"
+                title="Adjustment slider"
+              />
+              <button
+                onclick="copyToClipboard('${escapeForAttr(t.text)}')"
+                class="p-1.5 rounded-md hover:bg-zinc-200 transition-colors"
+                title="Copy translation"
+              >
+                <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <p class="text-zinc-700 leading-relaxed">${escapeHtml(t.text)}</p>
         </div>
       `).join('');
     }
@@ -351,29 +282,74 @@
       return div.innerHTML;
     }
 
+    function escapeForAttr(text) {
+      return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      setStatus('Copied!');
+      setTimeout(() => setStatus('Ready'), 1500);
+    }
+
     function showLoading() {
-      translationsList.innerHTML = `
-        <div class="loading">
-          <div class="spinner"></div>
-          <p>Translating to ${selectedLanguages.size} languages...</p>
-        </div>
-      `;
+      setStatus('Translating...', true);
+
+      // Show skeleton loaders
+      const skeletons = LANGUAGES
+        .filter(lang => selectedLanguages.has(lang.name))
+        .map(lang => `
+          <div class="p-4 border-b border-zinc-100 last:border-b-0">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-lg">${lang.flag}</span>
+              <span class="text-sm font-medium text-zinc-900">${lang.name}</span>
+            </div>
+            <div class="space-y-2">
+              <div class="h-4 bg-zinc-100 rounded animate-pulse w-3/4"></div>
+              <div class="h-4 bg-zinc-100 rounded animate-pulse w-1/2"></div>
+            </div>
+          </div>
+        `).join('');
+
+      translationsList.innerHTML = skeletons;
     }
 
     function showError(message) {
+      setStatus('Error');
       translationsList.innerHTML = `
-        <div class="error-message">
-          <p><strong>Error:</strong> ${escapeHtml(message)}</p>
+        <div class="p-6 text-center">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mb-3">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p class="text-sm text-red-600 font-medium">${escapeHtml(message)}</p>
         </div>
       `;
     }
 
     async function translate() {
       const text = inputText.value.trim();
-      if (!text || selectedLanguages.size === 0) return;
+
+      if (!text) {
+        currentTranslations = {};
+        renderTranslations({});
+        setStatus('Ready');
+        return;
+      }
+
+      if (selectedLanguages.size === 0) {
+        setStatus('Select languages');
+        return;
+      }
+
+      // Don't re-translate if text hasn't changed
+      if (text === lastTranslatedText && Object.keys(currentTranslations).length > 0) {
+        renderTranslations(currentTranslations);
+        return;
+      }
 
       isLoading = true;
-      updateUI();
       showLoading();
 
       try {
@@ -392,25 +368,36 @@
           throw new Error(data.error);
         }
 
-        renderTranslations(data.translations);
+        lastTranslatedText = text;
+        currentTranslations = data.translations;
+        renderTranslations(currentTranslations);
+        setStatus('Ready');
       } catch (error) {
         showError(error.message);
       } finally {
         isLoading = false;
-        updateUI();
       }
     }
 
-    // Event listeners
-    inputText.addEventListener('input', updateUI);
-    translateBtn.addEventListener('click', translate);
-
-    // Allow Ctrl+Enter to translate
-    inputText.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        if (!translateBtn.disabled) translate();
+    function debouncedTranslate() {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
       }
+
+      const text = inputText.value.trim();
+      if (text && text !== lastTranslatedText) {
+        setStatus('Waiting...', true);
+      }
+
+      debounceTimer = setTimeout(() => {
+        translate();
+      }, 600);
+    }
+
+    // Event listeners
+    inputText.addEventListener('input', () => {
+      updateUI();
+      debouncedTranslate();
     });
 
     // Initialize
