@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translate Mash</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      color: white;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .subtitle {
+      color: rgba(255,255,255,0.85);
+      margin-top: 8px;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .input-panel textarea {
+      width: 100%;
+      height: 200px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    .input-panel textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .language-selector {
+      margin-top: 20px;
+    }
+
+    .language-selector h3 {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .language-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .language-chip {
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .language-chip:hover {
+      border-color: #667eea;
+    }
+
+    .language-chip.selected {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .translate-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .translate-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .translate-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .translations-list {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .translation-item {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .translation-item:last-child {
+      border-bottom: none;
+    }
+
+    .translation-lang {
+      font-size: 0.85rem;
+      color: #667eea;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .translation-lang .flag {
+      font-size: 1.2rem;
+    }
+
+    .translation-text {
+      font-size: 1rem;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-message {
+      background: #fff5f5;
+      color: #c53030;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .char-count {
+      font-size: 0.85rem;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Translate Mash</h1>
+      <p class="subtitle">Translate to multiple languages at once</p>
+    </header>
+
+    <div class="main-content">
+      <div class="panel input-panel">
+        <div class="panel-header">
+          <span class="panel-title">Enter text</span>
+          <span class="char-count"><span id="charCount">0</span> characters</span>
+        </div>
+        <textarea id="inputText" placeholder="Type or paste text to translate..."></textarea>
+
+        <div class="language-selector">
+          <h3>Select output languages</h3>
+          <div class="language-chips" id="languageChips"></div>
+        </div>
+
+        <button class="translate-btn" id="translateBtn" disabled>Translate</button>
+      </div>
+
+      <div class="panel output-panel">
+        <div class="panel-header">
+          <span class="panel-title">Translations</span>
+          <span id="selectedCount">0 languages selected</span>
+        </div>
+        <div class="translations-list" id="translationsList">
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            <p>Enter text and click Translate<br>to see translations here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Top 10 most spoken languages with flags
+    const LANGUAGES = [
+      { name: 'English', flag: '🇬🇧' },
+      { name: 'Mandarin Chinese', flag: '🇨🇳' },
+      { name: 'Hindi', flag: '🇮🇳' },
+      { name: 'Spanish', flag: '🇪🇸' },
+      { name: 'French', flag: '🇫🇷' },
+      { name: 'Arabic', flag: '🇸🇦' },
+      { name: 'Bengali', flag: '🇧🇩' },
+      { name: 'Portuguese', flag: '🇧🇷' },
+      { name: 'Russian', flag: '🇷🇺' },
+      { name: 'Japanese', flag: '🇯🇵' }
+    ];
+
+    let selectedLanguages = new Set(LANGUAGES.map(l => l.name));
+    let isLoading = false;
+
+    const inputText = document.getElementById('inputText');
+    const charCount = document.getElementById('charCount');
+    const languageChips = document.getElementById('languageChips');
+    const translateBtn = document.getElementById('translateBtn');
+    const translationsList = document.getElementById('translationsList');
+    const selectedCount = document.getElementById('selectedCount');
+
+    // Initialize language chips
+    function initLanguageChips() {
+      languageChips.innerHTML = LANGUAGES.map(lang => `
+        <button class="language-chip selected" data-lang="${lang.name}">
+          ${lang.flag} ${lang.name}
+        </button>
+      `).join('');
+
+      languageChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('.language-chip');
+        if (!chip) return;
+
+        const lang = chip.dataset.lang;
+        if (selectedLanguages.has(lang)) {
+          selectedLanguages.delete(lang);
+          chip.classList.remove('selected');
+        } else {
+          selectedLanguages.add(lang);
+          chip.classList.add('selected');
+        }
+        updateUI();
+      });
+    }
+
+    function updateUI() {
+      const text = inputText.value.trim();
+      const hasText = text.length > 0;
+      const hasLanguages = selectedLanguages.size > 0;
+
+      translateBtn.disabled = !hasText || !hasLanguages || isLoading;
+      charCount.textContent = inputText.value.length;
+      selectedCount.textContent = `${selectedLanguages.size} language${selectedLanguages.size !== 1 ? 's' : ''} selected`;
+    }
+
+    function renderTranslations(translations) {
+      const orderedTranslations = LANGUAGES
+        .filter(lang => translations[lang.name])
+        .map(lang => ({
+          ...lang,
+          text: translations[lang.name]
+        }));
+
+      translationsList.innerHTML = orderedTranslations.map(t => `
+        <div class="translation-item">
+          <div class="translation-lang">
+            <span class="flag">${t.flag}</span>
+            ${t.name}
+          </div>
+          <div class="translation-text">${escapeHtml(t.text)}</div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showLoading() {
+      translationsList.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Translating to ${selectedLanguages.size} languages...</p>
+        </div>
+      `;
+    }
+
+    function showError(message) {
+      translationsList.innerHTML = `
+        <div class="error-message">
+          <p><strong>Error:</strong> ${escapeHtml(message)}</p>
+        </div>
+      `;
+    }
+
+    async function translate() {
+      const text = inputText.value.trim();
+      if (!text || selectedLanguages.size === 0) return;
+
+      isLoading = true;
+      updateUI();
+      showLoading();
+
+      try {
+        const response = await fetch('/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            languages: Array.from(selectedLanguages)
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        renderTranslations(data.translations);
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        isLoading = false;
+        updateUI();
+      }
+    }
+
+    // Event listeners
+    inputText.addEventListener('input', updateUI);
+    translateBtn.addEventListener('click', translate);
+
+    // Allow Ctrl+Enter to translate
+    inputText.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (!translateBtn.disabled) translate();
+      }
+    });
+
+    // Initialize
+    initLanguageChips();
+    updateUI();
+  </script>
+</body>
+</html>
