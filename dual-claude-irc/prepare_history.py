@@ -18,50 +18,103 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 
+def extract_message_content(msg: dict) -> tuple:
+    """Extract content from a message, returning (text_content, has_thinking, thinking_preview).
+
+    Handles Claude.ai export format with content blocks including thinking.
+    """
+    # Check for direct 'text' field (Claude.ai format)
+    direct_text = msg.get('text', '')
+
+    content_field = msg.get('content')
+    has_thinking = False
+    thinking_preview = ""
+    text_content = ""
+
+    if content_field is None:
+        return direct_text, False, ""
+
+    if isinstance(content_field, str):
+        return content_field, False, ""
+
+    if isinstance(content_field, list):
+        text_parts = []
+        thinking_parts = []
+
+        for block in content_field:
+            if isinstance(block, str):
+                text_parts.append(block)
+            elif isinstance(block, dict):
+                block_type = block.get('type', '')
+
+                if block_type == 'thinking':
+                    has_thinking = True
+                    thinking_text = block.get('thinking', '')
+                    if thinking_text:
+                        thinking_parts.append(thinking_text)
+
+                elif block_type == 'text':
+                    text_content = block.get('text', '')
+                    if text_content:
+                        text_parts.append(text_content)
+
+                elif 'text' in block:
+                    text_parts.append(block['text'])
+
+        text_content = '\n'.join(text_parts) if text_parts else direct_text
+        thinking_preview = thinking_parts[0][:100] + "..." if thinking_parts else ""
+
+    return text_content or direct_text, has_thinking, thinking_preview
+
+
 def load_conversation(file_path: str) -> Dict[str, Any]:
-    """Load conversation from various formats."""
+    """Load conversation from various formats.
+
+    Supports:
+    - Claude.ai export format (chat_messages with sender, content blocks, thinking)
+    - Anthropic API format (messages with role, content)
+    - Simple format (messages array with role/content)
+    """
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     result = {
         'system': None,
-        'messages': []
+        'messages': [],
+        'raw_messages': [],  # Keep raw for fork file creation
+        'metadata': {}
     }
 
     # Handle different formats
     if isinstance(data, list):
-        # Direct array of messages
-        result['messages'] = data
+        result['raw_messages'] = data
     elif isinstance(data, dict):
-        # Check for various keys
-        if 'messages' in data:
-            result['messages'] = data['messages']
+        # Claude.ai export format uses 'chat_messages'
+        if 'chat_messages' in data:
+            result['raw_messages'] = data['chat_messages']
+        elif 'messages' in data:
+            result['raw_messages'] = data['messages']
         elif 'conversation' in data:
-            result['messages'] = data['conversation']
-        elif 'chat_messages' in data:
-            result['messages'] = data['chat_messages']
+            result['raw_messages'] = data['conversation']
 
         # Look for system prompt
         result['system'] = data.get('system') or data.get('system_prompt') or data.get('model_instructions')
 
+        # Store metadata
+        result['metadata'] = {
+            'name': data.get('name', ''),
+            'summary': data.get('summary', ''),
+            'uuid': data.get('uuid', '')
+        }
+
     # Normalize messages
     normalized = []
-    for msg in result['messages']:
-        role = msg.get('role', '')
-        content = msg.get('content', '')
+    for msg in result['raw_messages']:
+        # Handle different role/sender field names
+        role = msg.get('role') or msg.get('sender', '')
 
-        # Handle content blocks (API format)
-        if isinstance(content, list):
-            text_parts = []
-            for block in content:
-                if isinstance(block, dict):
-                    if block.get('type') == 'text':
-                        text_parts.append(block.get('text', ''))
-                    elif 'text' in block:
-                        text_parts.append(block['text'])
-                elif isinstance(block, str):
-                    text_parts.append(block)
-            content = '\n'.join(text_parts)
+        # Extract content with thinking info
+        content, has_thinking, thinking_preview = extract_message_content(msg)
 
         # Normalize role names
         if role in ('human', 'user'):
@@ -69,11 +122,13 @@ def load_conversation(file_path: str) -> Dict[str, Any]:
         elif role in ('assistant', 'ai', 'claude'):
             role = 'assistant'
         else:
-            continue  # Skip system or unknown roles in message list
+            continue  # Skip system or unknown roles
 
         normalized.append({
             'role': role,
-            'content': content
+            'content': content,
+            'has_thinking': has_thinking,
+            'thinking_preview': thinking_preview
         })
 
     result['messages'] = normalized
@@ -97,23 +152,31 @@ def inspect_conversation(data: Dict[str, Any], show_full: bool = False):
     print(f"{'='*70}")
     print(f"Total messages: {len(messages)}")
 
+    # Show metadata if available
+    if data.get('metadata', {}).get('name'):
+        print(f"Conversation: {data['metadata']['name']}")
+
     if data['system']:
         print(f"\nSystem prompt found: {truncate_text(data['system'], 80)}")
 
     # Count by role
     user_count = sum(1 for m in messages if m['role'] == 'user')
     assistant_count = sum(1 for m in messages if m['role'] == 'assistant')
+    thinking_count = sum(1 for m in messages if m.get('has_thinking'))
     print(f"User messages: {user_count}")
     print(f"Assistant messages: {assistant_count}")
+    print(f"Messages with thinking blocks: {thinking_count}")
 
     print(f"\n{'='*70}")
     print("MESSAGE LIST (index: role - preview)")
+    print("💭 = has thinking block")
     print(f"{'='*70}")
 
     for i, msg in enumerate(messages):
         role_symbol = "👤" if msg['role'] == 'user' else "🤖"
-        preview = truncate_text(msg['content'], 60) if not show_full else msg['content']
-        print(f"{i:4d}: {role_symbol} {msg['role']:9s} | {preview}")
+        thinking_symbol = "💭" if msg.get('has_thinking') else "  "
+        preview = truncate_text(msg['content'], 55) if not show_full else msg['content']
+        print(f"{i:4d}: {role_symbol}{thinking_symbol} {msg['role']:9s} | {preview}")
 
     # Suggest fork points
     print(f"\n{'='*70}")
@@ -144,18 +207,26 @@ def create_fork_files(
     output_dir: str,
     base_name: str = "fork"
 ):
-    """Create separate history files for each fork point."""
+    """Create separate history files for each fork point.
+
+    Preserves the original message format including thinking blocks.
+    """
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
     created_files = []
 
+    # Use raw_messages to preserve original format with thinking
+    raw_messages = data.get('raw_messages', data['messages'])
+
     for i, fork_at in enumerate(fork_points):
         fork_data = {
             'system': data['system'],
-            'messages': data['messages'][:fork_at],
+            'chat_messages': raw_messages[:fork_at],  # Use chat_messages for Claude.ai format
+            'messages': raw_messages[:fork_at],  # Also include as messages for compatibility
             'fork_point': fork_at,
-            'original_total': len(data['messages'])
+            'original_total': len(raw_messages),
+            'metadata': data.get('metadata', {})
         }
 
         filename = output_path / f"{base_name}_{i+1}_at_{fork_at}.json"

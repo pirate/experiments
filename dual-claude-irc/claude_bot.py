@@ -110,7 +110,13 @@ class ClaudeIRCBot:
         self.logger = logging.getLogger(f"Bot-{nickname}")
 
     def _load_history(self, history_file: str, fork_at: Optional[int] = None):
-        """Load conversation history from a JSON file."""
+        """Load conversation history from a JSON file.
+
+        Supports multiple formats:
+        - Claude.ai export format (chat_messages with sender, content blocks including thinking)
+        - Anthropic API format (messages with role, content)
+        - Simple format (messages array with role/content)
+        """
         path = Path(history_file)
         if not path.exists():
             raise FileNotFoundError(f"History file not found: {history_file}")
@@ -124,11 +130,20 @@ class ClaudeIRCBot:
             # Direct list of messages
             messages = data
         elif isinstance(data, dict):
-            # Object with messages key
-            messages = data.get('messages', data.get('conversation', []))
-            # Also check for system prompt
+            # Claude.ai export format uses 'chat_messages'
+            if 'chat_messages' in data:
+                messages = data['chat_messages']
+            else:
+                # Standard format uses 'messages' or 'conversation'
+                messages = data.get('messages', data.get('conversation', []))
+
+            # Check for system prompt in various locations
             if not self.original_system_prompt:
                 self.original_system_prompt = data.get('system', data.get('system_prompt'))
+
+            # Store conversation metadata if available
+            if 'summary' in data:
+                self.logger.info(f"Conversation summary: {data['summary'][:200]}...")
 
         # Apply fork point
         if fork_at is not None:
@@ -136,30 +151,94 @@ class ClaudeIRCBot:
 
         # Convert to our Message format
         for msg in messages:
-            role = msg.get('role', '')
-            content = msg.get('content', '')
+            # Handle different role/sender field names
+            role = msg.get('role') or msg.get('sender', '')
 
-            # Handle content that might be a list (API format)
-            if isinstance(content, list):
-                # Extract text from content blocks
-                text_parts = []
-                for block in content:
-                    if isinstance(block, dict):
-                        if block.get('type') == 'text':
-                            text_parts.append(block.get('text', ''))
-                        elif 'text' in block:
-                            text_parts.append(block['text'])
-                    elif isinstance(block, str):
-                        text_parts.append(block)
-                content = '\n'.join(text_parts)
+            # Normalize role names
+            if role in ('human', 'user'):
+                normalized_role = 'user'
+            elif role == 'assistant':
+                normalized_role = 'assistant'
+            else:
+                continue  # Skip unknown roles
 
-            if role in ('user', 'assistant', 'human'):
-                # Normalize 'human' to 'user'
-                normalized_role = 'user' if role == 'human' else role
+            # Extract content - handle multiple formats
+            content = self._extract_message_content(msg)
+
+            if content:
                 self.base_history.append(Message(role=normalized_role, content=content))
 
         self.has_base_history = len(self.base_history) > 0
         self.logger.info(f"Loaded {len(self.base_history)} messages from history (fork_at={fork_at})")
+
+    def _extract_message_content(self, msg: dict) -> str:
+        """Extract content from a message, handling various formats including thinking blocks.
+
+        For Claude.ai exports, this preserves thinking blocks formatted as internal monologue,
+        which helps the forked Claude maintain continuity with its prior reasoning.
+        """
+        # Check for direct 'text' field (Claude.ai format often has this)
+        if 'text' in msg and isinstance(msg['text'], str):
+            direct_text = msg['text']
+        else:
+            direct_text = None
+
+        # Check for 'content' field (could be string, list of blocks, etc.)
+        content_field = msg.get('content')
+
+        if content_field is None:
+            return direct_text or ''
+
+        # Simple string content
+        if isinstance(content_field, str):
+            return content_field
+
+        # List of content blocks (Claude.ai or API format)
+        if isinstance(content_field, list):
+            parts = []
+            thinking_parts = []
+            text_parts = []
+
+            for block in content_field:
+                if isinstance(block, str):
+                    text_parts.append(block)
+                elif isinstance(block, dict):
+                    block_type = block.get('type', '')
+
+                    if block_type == 'thinking':
+                        # Preserve thinking as internal monologue marker
+                        thinking_text = block.get('thinking', '')
+                        if thinking_text:
+                            thinking_parts.append(thinking_text)
+
+                    elif block_type == 'text':
+                        text_content = block.get('text', '')
+                        if text_content:
+                            text_parts.append(text_content)
+
+                    elif 'text' in block:
+                        # Generic block with text field
+                        text_parts.append(block['text'])
+
+            # Combine thinking and text
+            # Format thinking as internal monologue so the forked Claude recognizes it
+            combined_parts = []
+
+            if thinking_parts:
+                # Mark thinking blocks clearly so they're understood as prior internal reasoning
+                thinking_combined = '\n\n'.join(thinking_parts)
+                combined_parts.append(f"[Internal reasoning: {thinking_combined}]")
+
+            if text_parts:
+                combined_parts.append('\n\n'.join(text_parts))
+
+            if combined_parts:
+                return '\n\n'.join(combined_parts)
+
+            # Fallback to direct text if content blocks were empty
+            return direct_text or ''
+
+        return direct_text or ''
 
     def connect(self):
         self.logger.info(f"Connecting to {self.server}:{self.port}...")
